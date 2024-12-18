@@ -34,7 +34,12 @@ async function run() {
     const ApplicationCollection = client.db('JobsDB').collection('application')
     // job related
     app.get('/jobs',async(req,res)=>{
-       const cursor =JobCollection.find()
+      const email =req.query.email ;
+      let query ={}
+      if (email) {
+        query={hr_email : email}
+      }
+       const cursor =JobCollection.find(query)
        const result =await cursor.toArray();
        res.send(result)
     })
@@ -53,12 +58,32 @@ async function run() {
     })
 
   //  job application
+    app.get(`/job_application/jobs/:job_id`,async(req,res)=>{
+      const jobId =req.params.job_id
+      const query = {job_id: jobId}
+      const result =await ApplicationCollection.find(query).toArray()
+      res.send(result)
+    })
+
     app.post('/job_application', async (req, res) => {
       const application = req.body;
       console.log(application);
       const result = await ApplicationCollection.insertOne(application);
       res.send(result); 
     });
+    // update applyed jobs
+    app.patch('/job_application/:id',async(req,res)=>{
+      const id = req.params.id
+      const data =req.body
+      const filter ={_id : new ObjectId(id)}
+      const updatedDoc ={
+        $set:{
+          status :data.status
+        }
+      }
+      const result =await ApplicationCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
 
     
 
